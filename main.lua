@@ -1,12 +1,161 @@
-local p=game:GetService("Players")local h=game:GetService("HttpService")local pl=p.LocalPlayer local pg=pl:WaitForChild("PlayerGui")
-local sg=Instance.new("ScreenGui")sg.Name="ShimmyLoader"sg.ResetOnSpawn=false sg.Parent=pg
-local mf=Instance.new("Frame")mf.Size=UDim2.new(0,500,0,600)mf.Position=UDim2.new(0.5,-250,0.5,-300)mf.BackgroundColor3=Color3.fromRGB(0,0,0)mf.Parent=sg
-local t=Instance.new("TextLabel")t.Size=UDim2.new(1,0,0,50)t.BackgroundTransparency=1 t.Text="Shimmy Loader"t.TextColor3=Color3.fromRGB(255,255,255)t.TextScaled=true t.Parent=mf
-local ins={}for i=1,10 do local b=Instance.new("TextBox")b.Size=UDim2.new(1,-20,0,40)b.Position=UDim2.new(0,10,0,60+(i-1)*45)b.PlaceholderText="Game "..i.." (e.g. Prison Life)"b.BackgroundColor3=Color3.fromRGB(40,40,40)b.TextColor3=Color3.fromRGB(255,255,255)b.TextScaled=true b.Parent=mf ins[i]=b end
-local gb=Instance.new("TextButton")gb.Size=UDim2.new(1,-20,0,50)gb.Position=UDim2.new(0,10,1,-60)gb.BackgroundColor3=Color3.fromRGB(0,150,0)gb.Text="Generate Loadout"gb.TextColor3=Color3.fromRGB(255,255,255)gb.TextScaled=true gb.Parent=mf
-local lf=Instance.new("Frame")lf.Size=UDim2.new(0,500,0,600)lf.Position=UDim2.new(0.5,-250,0.5,-300)lf.BackgroundColor3=Color3.fromRGB(0,0,0)lf.Visible=false lf.Parent=sg
-local lt=Instance.new("TextLabel")lt.Size=UDim2.new(1,0,0,50)lt.BackgroundTransparency=1 lt.Text="Generated Loadout - Click Exec"lt.TextColor3=Color3.fromRGB(255,255,255)lt.TextScaled=true lt.Parent=lf
-local slots={}local gnames={}
-local function fetch(g)local s,e=pcall(function()local u="https://scriptblox.com/api/script/search?q="..h:UrlEncode(g).."&max=5&sortBy=views&order=desc"local d=h:GetAsync(u)local j=h:JSONDecode(d)if j.result and j.result.scripts and #j.result.scripts>0 then local b=j.result.scripts[1]local r="https://scriptblox.com/api/script/raw/"..b._id return h:GetAsync(r)end end)return s and e or nil end
-gb.MouseButton1Click:Connect(function()gnames={}for i=1,10 do local n=ins[i].Text:match("^%s*(.-)%s*$")gnames[i]=n\~=""and n or("Game "..i)end mf.Visible=false lf.Visible=true for _,s in ipairs(slots)do s:Destroy()end slots={}for i=1,10 do local sl=Instance.new("Frame")sl.Size=UDim2.new(1,-20,0,50)sl.Position=UDim2.new(0,10,0,60+(i-1)*55)sl.BackgroundColor3=Color3.fromRGB(30,30,30)sl.Parent=lf local nl=Instance.new("TextLabel")nl.Size=UDim2.new(0,40,1,0)nl.BackgroundTransparency=1 nl.Text=i.."."nl.TextColor3=Color3.fromRGB(255,255,255)nl.TextScaled=true nl.Parent=sl local gl=Instance.new("TextLabel")gl.Size=UDim2.new(0.6,-50,1,0)gl.Position=UDim2.new(0,50,0,0)gl.BackgroundTransparency=1 gl.Text=gnames[i]gl.TextColor3=Color3.fromRGB(200,200,200)gl.TextScaled=true gl.TextXAlignment=Enum.TextXAlignment.Left gl.Parent=sl local eb=Instance.new("TextButton")eb.Size=UDim2.new(0,80,0.8,0)eb.Position=UDim2.new(1,-90,0.1,0)eb.BackgroundColor3=Color3.fromRGB(0,120,255)eb.Text="Exec"eb.TextColor3=Color3.fromRGB(255,255,255)eb.Parent=sl eb.MouseButton1Click:Connect(function()eb.Text="Fetching..."local c=fetch(gnames[i])if c then local ok,err=pcall(function()loadstring(c)()end)eb.Text=ok and "Executed!" or "Error"else eb.Text="Not Found"end wait(2)eb.Text="Exec"end)table.insert(slots,sl)end end)
-local cb=Instance.new("TextButton")cb.Size=UDim2.new(0,40,0,40)cb.Position=UDim2.new(1,-45,0,5)cb.BackgroundColor3=Color3.fromRGB(180,0,0)cb.Text="X"cb.TextColor3=Color3.fromRGB(255,255,255)cb.Parent=lf cb.MouseButton1Click:Connect(function()sg:Destroy()end)
+-- Shimmy Loader - Clean Readable Version
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ShimmyLoader"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- Main Input Frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 500, 0, 600)
+mainFrame.Position = UDim2.new(0.5, -250, 0.5, -300)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+mainFrame.Parent = screenGui
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 50)
+title.BackgroundTransparency = 1
+title.Text = "Shimmy Loader"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextScaled = true
+title.Parent = mainFrame
+
+local inputBoxes = {}
+for i = 1, 10 do
+    local box = Instance.new("TextBox")
+    box.Size = UDim2.new(1, -20, 0, 40)
+    box.Position = UDim2.new(0, 10, 0, 60 + (i-1)*45)
+    box.PlaceholderText = "Game " .. i .. " (e.g. Prison Life)"
+    box.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    box.TextColor3 = Color3.fromRGB(255, 255, 255)
+    box.TextScaled = true
+    box.Parent = mainFrame
+    inputBoxes[i] = box
+end
+
+local generateBtn = Instance.new("TextButton")
+generateBtn.Size = UDim2.new(1, -20, 0, 50)
+generateBtn.Position = UDim2.new(0, 10, 1, -60)
+generateBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+generateBtn.Text = "Generate Loadout"
+generateBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+generateBtn.TextScaled = true
+generateBtn.Parent = mainFrame
+
+-- Loadout Frame
+local loadoutFrame = Instance.new("Frame")
+loadoutFrame.Size = UDim2.new(0, 500, 0, 600)
+loadoutFrame.Position = UDim2.new(0.5, -250, 0.5, -300)
+loadoutFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+loadoutFrame.Visible = false
+loadoutFrame.Parent = screenGui
+
+local loadoutTitle = Instance.new("TextLabel")
+loadoutTitle.Size = UDim2.new(1, 0, 0, 50)
+loadoutTitle.BackgroundTransparency = 1
+loadoutTitle.Text = "Generated Loadout - Click Exec"
+loadoutTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+loadoutTitle.TextScaled = true
+loadoutTitle.Parent = loadoutFrame
+
+local loadoutSlots = {}
+local gameNames = {}
+
+local function fetchBestScript(gameName)
+    local success, code = pcall(function()
+        local searchUrl = "https://scriptblox.com/api/script/search?q=" .. HttpService:UrlEncode(gameName) .. "&max=5&sortBy=views&order=desc"
+        local data = HttpService:GetAsync(searchUrl)
+        local json = HttpService:JSONDecode(data)
+        
+        if json.result and json.result.scripts and #json.result.scripts > 0 then
+            local bestScript = json.result.scripts[1]
+            local rawUrl = "https://scriptblox.com/api/script/raw/" .. bestScript._id
+            return HttpService:GetAsync(rawUrl)
+        end
+        return nil
+    end)
+    return success and code or nil
+end
+
+generateBtn.MouseButton1Click:Connect(function()
+    gameNames = {}
+    for i = 1, 10 do
+        local name = inputBoxes[i].Text:match("^%s*(.-)%s*$")
+        gameNames[i] = name \~= "" and name or ("Game " .. i)
+    end
+    
+    mainFrame.Visible = false
+    loadoutFrame.Visible = true
+    
+    for _, slot in ipairs(loadoutSlots) do
+        slot:Destroy()
+    end
+    loadoutSlots = {}
+    
+    for i = 1, 10 do
+        local slotFrame = Instance.new("Frame")
+        slotFrame.Size = UDim2.new(1, -20, 0, 50)
+        slotFrame.Position = UDim2.new(0, 10, 0, 60 + (i-1)*55)
+        slotFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        slotFrame.Parent = loadoutFrame
+        
+        local numberLabel = Instance.new("TextLabel")
+        numberLabel.Size = UDim2.new(0, 40, 1, 0)
+        numberLabel.BackgroundTransparency = 1
+        numberLabel.Text = i .. "."
+        numberLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        numberLabel.TextScaled = true
+        numberLabel.Parent = slotFrame
+        
+        local gameLabel = Instance.new("TextLabel")
+        gameLabel.Size = UDim2.new(0.6, -50, 1, 0)
+        gameLabel.Position = UDim2.new(0, 50, 0, 0)
+        gameLabel.BackgroundTransparency = 1
+        gameLabel.Text = gameNames[i]
+        gameLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+        gameLabel.TextScaled = true
+        gameLabel.TextXAlignment = Enum.TextXAlignment.Left
+        gameLabel.Parent = slotFrame
+        
+        local execButton = Instance.new("TextButton")
+        execButton.Size = UDim2.new(0, 80, 0.8, 0)
+        execButton.Position = UDim2.new(1, -90, 0.1, 0)
+        execButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+        execButton.Text = "Exec"
+        execButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        execButton.Parent = slotFrame
+        
+        execButton.MouseButton1Click:Connect(function()
+            execButton.Text = "Fetching..."
+            local scriptCode = fetchBestScript(gameNames[i])
+            if scriptCode then
+                local success, err = pcall(function()
+                    loadstring(scriptCode)()
+                end)
+                execButton.Text = success and "Executed!" or "Error"
+            else
+                execButton.Text = "Not Found"
+            end
+            task.wait(2)
+            execButton.Text = "Exec"
+        end)
+        
+        table.insert(loadoutSlots, slotFrame)
+    end
+end)
+
+-- Close Button
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 40, 0, 40)
+closeButton.Position = UDim2.new(1, -45, 0, 5)
+closeButton.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+closeButton.Text = "X"
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.Parent = loadoutFrame
+closeButton.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)
